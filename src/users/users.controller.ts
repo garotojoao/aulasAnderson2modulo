@@ -1,0 +1,33 @@
+import { Body, Controller, Get, Param, Post, Put , Delete} from '@nestjs/common';
+import { UsersService } from './users.service';
+import { CreateUserDto } from './dto/create-user.dto';   
+import { UpdateUserDto } from './dto/update-user.dto';
+
+@Controller('users')
+export class UsersController {
+    constructor(private readonly service: UsersService) {}
+
+    @Delete(':id')
+    deletarUsuario(@Param("id")id: number) :any{
+        return this.service.deletarUsuario(id);
+    }
+    @Put()
+    atualizarUsuario(@Body() dados: UpdateUserDto): any {
+        return this.service.atualizarUsuario(dados);
+    }
+    
+    @Post()
+    salvarUsuario(@Body() dados: CreateUserDto) : any{
+        return this.service.salvarUsuario(dados);
+    }
+
+    @Get()
+    buscarTodosUsuarios() : any{
+        return this.service.buscarTodos();
+    }
+
+    @Get(":id")
+    buscarUsuarioPorId(@Param("id") id: number) : any{
+        return this.service.buscarPorId(id);
+    }
+}

@@ -1,0 +1,802 @@
+{
+  "info": {
+    "name": "Users API",
+    "description": "Collection completa da Users API (NestJS) com exemplos de request/response e validações automáticas.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Root",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": ["{{baseUrl}}"],
+              "path": [""]
+            },
+            "description": "Verifica se a API está rodando."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "text/html; charset=utf-8" }],
+              "body": "Hello World!"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retorna Hello World', () => pm.expect(pm.response.text()).to.include('Hello World'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Criar usuário - Sucesso",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Anderson Cruz\",\n  \"email\": \"anderson@email.com\",\n  \"age\": 28\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            },
+            "description": "Cria um novo usuário. Campos obrigatórios: name, email, age (mín 16, máx 120)."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"id\": 1,\n  \"name\": \"Anderson Cruz\",\n  \"email\": \"anderson@email.com\",\n  \"age\": 28,\n  \"created_at\": \"2026-04-27T12:00:00.000Z\",\n  \"update_at\": \"2026-04-27T12:00:00.000Z\"\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Retorna Content-Type JSON', () => pm.response.to.have.header('Content-Type', /json/));",
+                  "const body = pm.response.json();",
+                  "pm.test('Retorna id gerado', () => pm.expect(body).to.have.property('id'));",
+                  "pm.test('Retorna name correto', () => pm.expect(body.name).to.eql('Anderson Cruz'));",
+                  "pm.test('Retorna email correto', () => pm.expect(body.email).to.eql('anderson@email.com'));",
+                  "pm.test('Retorna age correto', () => pm.expect(body.age).to.eql(28));",
+                  "pm.test('Retorna created_at', () => pm.expect(body).to.have.property('created_at'));",
+                  "pm.environment.set('userId', body.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar usuário - Validação: campos ausentes",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            },
+            "description": "Testa a validação quando todos os campos estão ausentes."
+          },
+          "response": [
+            {
+              "name": "400 Bad Request - campos ausentes",
+              "status": "Bad Request",
+              "code": 400,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"message\": [\n    \"name should not be empty\",\n    \"name must be a string\",\n    \"email should not be empty\",\n    \"email must be an email\",\n    \"age should not be empty\",\n    \"age must be an integer number\"\n  ],\n  \"error\": \"Bad Request\",\n  \"statusCode\": 400\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test('Retorna array de erros', () => pm.expect(body.message).to.be.an('array'));",
+                  "pm.test('statusCode é 400', () => pm.expect(body.statusCode).to.eql(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar usuário - Validação: email inválido",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Anderson Cruz\",\n  \"email\": \"email-invalido\",\n  \"age\": 28\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            },
+            "description": "Testa a validação de e-mail com formato inválido."
+          },
+          "response": [
+            {
+              "name": "400 Bad Request - email inválido",
+              "status": "Bad Request",
+              "code": 400,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"message\": [\"email must be an email\"],\n  \"error\": \"Bad Request\",\n  \"statusCode\": 400\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test('Erro de email', () => pm.expect(body.message.join(' ')).to.include('email'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar usuário - Validação: age < 16",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Anderson Cruz\",\n  \"email\": \"anderson@email.com\",\n  \"age\": 10\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            },
+            "description": "Testa a validação de idade mínima (16)."
+          },
+          "response": [
+            {
+              "name": "400 Bad Request - age inválida",
+              "status": "Bad Request",
+              "code": 400,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"message\": [\"age must not be less than 16\"],\n  \"error\": \"Bad Request\",\n  \"statusCode\": 400\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test('Erro de age mínima', () => pm.expect(body.message.join(' ')).to.include('16'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar todos os usuários",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            },
+            "description": "Retorna todos os usuários cadastrados."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "[\n  {\n    \"id\": 1,\n    \"name\": \"Anderson Cruz\",\n    \"email\": \"anderson@email.com\",\n    \"age\": 28,\n    \"created_at\": \"2026-04-27T12:00:00.000Z\",\n    \"update_at\": \"2026-04-27T12:00:00.000Z\"\n  }\n]"
+            },
+            {
+              "name": "200 OK - lista vazia",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "[]"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retorna array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar usuário por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            },
+            "description": "Busca um usuário pelo ID. Use a variável {{userId}} definida no create."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"id\": 1,\n  \"name\": \"Anderson Cruz\",\n  \"email\": \"anderson@email.com\",\n  \"age\": 28,\n  \"created_at\": \"2026-04-27T12:00:00.000Z\",\n  \"update_at\": \"2026-04-27T12:00:00.000Z\"\n}"
+            },
+            {
+              "name": "200 OK - não encontrado (null)",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "null"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "if (body) {",
+                  "  pm.test('Retorna id correto', () => pm.expect(body.id).to.be.a('number'));",
+                  "  pm.test('Tem campo name', () => pm.expect(body).to.have.property('name'));",
+                  "  pm.test('Tem campo email', () => pm.expect(body).to.have.property('email'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar usuário - Sucesso",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": {{userId}},\n  \"name\": \"Anderson L. Cruz\",\n  \"age\": 29\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            },
+            "description": "Atualiza um usuário. Apenas id é obrigatório; name, email e age são opcionais."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"id\": 1,\n  \"name\": \"Anderson L. Cruz\",\n  \"email\": \"anderson@email.com\",\n  \"age\": 29,\n  \"created_at\": \"2026-04-27T12:00:00.000Z\",\n  \"update_at\": \"2026-04-27T12:30:00.000Z\"\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Name atualizado', () => pm.expect(body.name).to.eql('Anderson L. Cruz'));",
+                  "pm.test('Age atualizado', () => pm.expect(body.age).to.eql(29));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar usuário - Validação: id ausente",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sem ID\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            },
+            "description": "Testa a validação quando o id não é enviado no body do PUT."
+          },
+          "response": [
+            {
+              "name": "400 Bad Request - id ausente",
+              "status": "Bad Request",
+              "code": 400,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"message\": [\n    \"id should not be empty\",\n    \"id must be an integer number\"\n  ],\n  \"error\": \"Bad Request\",\n  \"statusCode\": 400\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test('Erro de id ausente', () => pm.expect(body.message.join(' ')).to.include('id'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Deletar usuário",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            },
+            "description": "Remove um usuário pelo ID."
+          },
+          "response": [
+            {
+              "name": "200 OK - deletado",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"raw\": [],\n  \"affected\": 1\n}"
+            },
+            {
+              "name": "200 OK - não encontrado",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"raw\": [],\n  \"affected\": 0\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Retorna affected', () => pm.expect(body).to.have.property('affected'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Criar produto - Sucesso",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Notebook Dell\",\n  \"price\": 3499.99,\n  \"description\": \"Notebook Dell Inspiron 15\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"]
+            },
+            "description": "Cria um novo produto. Campos: name (string), price (decimal), description (string).\n\n⚠️ Atenção: o endpoint não aplica DTO de validação atualmente."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"id\": 1,\n  \"name\": \"Notebook Dell\",\n  \"price\": \"3499.99\",\n  \"description\": \"Notebook Dell Inspiron 15\"\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('Retorna id gerado', () => pm.expect(body).to.have.property('id'));",
+                  "pm.test('Retorna name', () => pm.expect(body.name).to.eql('Notebook Dell'));",
+                  "pm.environment.set('productId', body.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar todos os produtos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"]
+            },
+            "description": "Retorna todos os produtos cadastrados."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "[\n  {\n    \"id\": 1,\n    \"name\": \"Notebook Dell\",\n    \"price\": \"3499.99\",\n    \"description\": \"Notebook Dell Inspiron 15\"\n  }\n]"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retorna array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar produto por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", "{{productId}}"]
+            },
+            "description": "Busca um produto pelo ID."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"id\": 1,\n  \"name\": \"Notebook Dell\",\n  \"price\": \"3499.99\",\n  \"description\": \"Notebook Dell Inspiron 15\"\n}"
+            },
+            {
+              "name": "200 OK - não encontrado (null)",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "null"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "if (body) {",
+                  "  pm.test('Retorna id', () => pm.expect(body.id).to.be.a('number'));",
+                  "  pm.test('Tem campo price', () => pm.expect(body).to.have.property('price'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "Criar categoria - Sucesso",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Eletrônicos\",\n  \"description\": \"Produtos eletrônicos em geral\",\n  \"status\": \"ativo\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories"]
+            },
+            "description": "Cria uma nova categoria. name e status são obrigatórios; description é opcional."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"id\": 1,\n  \"name\": \"Eletrônicos\",\n  \"status\": \"ativo\"\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('Retorna id', () => pm.expect(body).to.have.property('id'));",
+                  "pm.test('Retorna name', () => pm.expect(body.name).to.eql('Eletrônicos'));",
+                  "pm.test('Retorna status', () => pm.expect(body.status).to.eql('ativo'));",
+                  "pm.environment.set('categoryId', body.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar categoria - Validação: campos ausentes",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories"]
+            },
+            "description": "Testa a validação quando name e status estão ausentes."
+          },
+          "response": [
+            {
+              "name": "400 Bad Request - campos ausentes",
+              "status": "Bad Request",
+              "code": 400,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"message\": [\n    \"name should not be empty\",\n    \"name must be a string\",\n    \"status should not be empty\",\n    \"status must be a string\"\n  ],\n  \"error\": \"Bad Request\",\n  \"statusCode\": 400\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test('Retorna array de erros', () => pm.expect(body.message).to.be.an('array'));",
+                  "pm.test('statusCode é 400', () => pm.expect(body.statusCode).to.eql(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar categoria - Validação: description vazia",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Eletrônicos\",\n  \"description\": \"\",\n  \"status\": \"ativo\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories"]
+            },
+            "description": "Testa a validação de description: quando enviada, não pode ser string vazia (@IsNotEmpty)."
+          },
+          "response": [
+            {
+              "name": "400 Bad Request - description vazia",
+              "status": "Bad Request",
+              "code": 400,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"message\": [\"description should not be empty\"],\n  \"error\": \"Bad Request\",\n  \"statusCode\": 400\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test('Erro de description vazia', () => pm.expect(body.message.join(' ')).to.include('description'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar categoria - Sem description (válido)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Roupas\",\n  \"status\": \"inativo\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories"]
+            },
+            "description": "Cria categoria sem description (campo opcional)."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"id\": 2,\n  \"name\": \"Roupas\",\n  \"status\": \"inativo\"\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('Retorna id', () => pm.expect(body).to.have.property('id'));",
+                  "pm.test('Retorna status inativo', () => pm.expect(body.status).to.eql('inativo'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar todas as categorias",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories"]
+            },
+            "description": "Retorna todas as categorias cadastradas."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "[\n  {\n    \"id\": 1,\n    \"name\": \"Eletrônicos\",\n    \"status\": \"ativo\"\n  },\n  {\n    \"id\": 2,\n    \"name\": \"Roupas\",\n    \"status\": \"inativo\"\n  }\n]"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retorna array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar categoria por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/categories/{{categoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories", "{{categoryId}}"]
+            },
+            "description": "Busca uma categoria pelo ID."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"id\": 1,\n  \"name\": \"Eletrônicos\",\n  \"status\": \"ativo\"\n}"
+            },
+            {
+              "name": "200 OK - não encontrado (null)",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "null"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "if (body) {",
+                  "  pm.test('Retorna id', () => pm.expect(body.id).to.be.a('number'));",
+                  "  pm.test('Tem campo name', () => pm.expect(body).to.have.property('name'));",
+                  "  pm.test('Tem campo status', () => pm.expect(body).to.have.property('status'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
