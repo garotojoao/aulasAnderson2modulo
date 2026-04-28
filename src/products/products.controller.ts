@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, Delete } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-products.dto';
 import { UpdateProductDto } from './dto/update-products.dto';
@@ -21,14 +21,12 @@ export class ProductsController {
     buscarTodosProdutos(): any {
         return this.service.buscarTodos();
     }
+    
 
     @Get(":id")
     buscarProdutoPorId(@Param("id") id: number): any {
         return this.service.buscarPorId(id);
     }
 
-    @Delete(':id')
-remove(@Param('id') id: string) {
-  return this.productsService.remove(+id);
-}
+
 }
