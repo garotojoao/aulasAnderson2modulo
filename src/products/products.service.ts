@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Products } from './products.entity';
 import { Repository } from 'typeorm';
 import { UpdateProductDto } from './dto/update-products.dto';
+import { PaginationDto } from 'src/util/dto/pagination.dto';
 
 @Injectable()
 export class ProductsService {
@@ -22,9 +23,18 @@ export class ProductsService {
     }
     
 
-    buscarTodos(): any {
-        return this.repo.find();
+    async buscarTodosProdutos(pagination: PaginationDto): Promise<any> {
+        let page = pagination.page ?? 1;
+        let limit = pagination.limit ?? 10;
+        let resultado = await this.repo.findAndCount({
+            skip: (page - 1) * limit,
+            take: limit
+        });
+        let data = resultado[0];
+        let total = resultado[1];
+        return { data, page, limit, total }
     }
+
 
     buscarPorId(id: number): any {
         return this.repo.findOne({ where: { id: id } });

@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Categories } from './categories.entity';
 import { Repository } from 'typeorm';
 import { CreatCategoriesDto } from './dto/create-categories.dto';
+import { PaginationDto } from 'src/util/dto/pagination.dto';
 
 @Injectable()
 export class CategoriesService {
@@ -21,8 +22,16 @@ export class CategoriesService {
         return this.repo.findOne({ where: { id: dados.id } });
     }
     
-    buscarTodos(): any{
-        return this.repo.find();
+    async buscarTodos(pagination: PaginationDto): Promise<any>{
+        let page = pagination.page ?? 1;
+        let limit = pagination.limit ?? 10;
+        let resultado = await this.repo.findAndCount({
+            skip: (page - 1) * limit,
+            take: limit
+        });
+        let data = resultado[0];
+        let total = resultado[1];
+        return { data, page, limit, total }
     }
 
     buscarPorId(id: number): any{
