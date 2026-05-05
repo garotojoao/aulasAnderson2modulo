@@ -5,11 +5,9 @@ import { UsersModule } from './users/users.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProductsModule } from './products/products.module';
 import { CategoriesModule } from './categories/categories.module';
-import { FileUploadModule } from './file-upload/file-upload.module';
 
 @Module({
   imports: [
-    
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: 'localhost',
@@ -20,15 +18,9 @@ import { FileUploadModule } from './file-upload/file-upload.module';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
-  UsersModule,
-  ProductsModule,
-  CategoriesModule,
-  FileUploadModule],
-  controllers: [AppController],
-  providers: [AppService],
-
+    UsersModule,
+    ProductsModule,
+    CategoriesModule,
+  ], 
 })
-
-
 export class AppModule {}
-

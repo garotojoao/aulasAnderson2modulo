@@ -21,6 +21,13 @@ export class UsersService {
         return this.repo.findOne({ where: { id: dados.id } });
     }
 
+    async salvarDados(file: Express.Multer.File, id:number) {
+        let usuario: any = this.repo.findOne ({where: {id: id }});
+        usuario.avatar = file.filename;
+
+    return await this.repo.update(id, usuario);
+  }
+
     async deletarUsuario(id: number): Promise<any> {
         let retorno = await this.repo.delete(id);
         let mensagem = { message: "usuario deletado com suceso" };

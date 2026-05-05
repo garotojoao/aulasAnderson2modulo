@@ -7,6 +7,9 @@ export class Users {
 
     @Column()
     name: string;
+
+    @Column()
+    avatar: string;
     
     @Column()
     email: string;
@@ -19,4 +22,5 @@ export class Users {
 
     @UpdateDateColumn()
     update_at: Date;
+    
 }
